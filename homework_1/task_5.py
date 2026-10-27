@@ -71,7 +71,7 @@ if __name__ == '__main__':
     print(f'Средняя оценка каждого товара: '
           f'{avg_rating_each_products(all_products_ratings)}')
     print(f'Худший товар по средней оценке среди тех, '
-          f'у кого есть хотя бы 2 отзыва:'
+          f'у кого есть хотя бы 2 отзыва: '
           f'{lowest_avg_rating_with_enough_reviews(all_products_ratings)}')
     print(f'Отзывов на 1 или 2 звезды: '
           f'{counter_bad_reviews}')

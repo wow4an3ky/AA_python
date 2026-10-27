@@ -11,12 +11,12 @@ def returned_sum(orders: list) -> float:
                if order['status'] == 'returned')
 
 
-def buyers_with_returns(orders: list) -> list:
+def buyers_with_returns(orders: list) -> set:
     """Кто хотя бы раз вернул заказ."""
-    buyers = []
+    buyers = set()
     for order in orders:
-        if order['status'] == 'returned' and order['buyer'] not in buyers:
-            buyers.append(order['buyer'])
+        if order['status'] == 'returned':
+            buyers.add(order['buyer'])
     return buyers
 
 
