@@ -8,17 +8,19 @@
 или передавать опциональным параметром в эту же функцию."""
 
 import csv
+from pathlib import Path
 
-INPUT_PATH = r'C:\Users\Владимир\AA_python\homework2\Corp_Summary.csv'
-OUTPUT_FILE = r'C:\Users\Владимир\AA_python\homework2\departmental_summary.csv'
+BASE_DIR = Path(__file__).resolve().parent
+INPUT_PATH = BASE_DIR / 'Corp_Summary.csv'
+OUTPUT_FILE = BASE_DIR / 'departmental_summary.csv'
 
 
 def import_csv(path: str) -> list[list[str]]:
     '''Импортируем csv файл.'''
-    with open(path, 'r', encoding='utf-8') as f:
-        reader = csv.reader(f)
-        data_base = [person[0].split(';') for person in list(reader)[1:]]
-    return data_base
+    with open(path, 'r', encoding='utf-8', newline='') as f:
+        reader = csv.reader(f, delimiter=';')
+        next(reader)
+        return list(reader)
 
 
 def hierarchy(data: list[list[str]]) -> dict[str, set[str]]:
@@ -35,17 +37,16 @@ def departmental_summary(data: list[list[str]]) -> dict[str, dict]:
     department_statistics = {}
     for person in data:
         people_in_department.setdefault(
-            person[1], {}
-        ).setdefault('stats', []).append(int(person[5]))
+            person[1], []
+        ).append(int(person[5]))
     for department, stats in people_in_department.items():
-        for person_and_salary in stats.values():
-            department_statistics[department] = {
-                'number_of_employees': len(person_and_salary),
-                'minimum_salary': min(person_and_salary),
-                'maximum_salary': max(person_and_salary),
-                'average_salary': (
-                    sum(person_and_salary) / len(person_and_salary))
-            }
+        department_statistics[department] = {
+            'number_of_employees': len(stats),
+            'minimum_salary': min(stats),
+            'maximum_salary': max(stats),
+            'average_salary': (
+                sum(stats) / len(stats))
+        }
     return department_statistics
 
 
@@ -54,25 +55,23 @@ def save_departmental_summary_csv(
 ) -> None:
     '''Запись сводки по департаментам в csv файл.'''
     department_statistics = departmental_summary(data)
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, 'w', encoding='utf-8', newline='') as f:
+        writer= csv.writer(f, delimiter=';')
+        writer.writerow([
+            'department',
+            'number_of_employees',
+            'minimum_salary',
+            'maximum_salary',
+            'average_salary',
+        ])
         for department, stats in department_statistics.items():
-            f.write(f'Сводка по департаменту {department}:\n')
-            f.write(
-                f'\t-Количество людей в департаменте: '
-                f'{stats["number_of_employees"]}\n'
-            )
-            f.write(
-                f'\t-Минимальная зарплата в департаменте: '
-                f'{stats["minimum_salary"]}\n'
-            )
-            f.write(
-                f'\t-Максимальная зарплата в департаменте: '
-                f' {stats["maximum_salary"]}\n'
-            )
-            f.write(
-                f'\t-Средняя зарплата в департаменте: '
-                f'{stats["average_salary"]}\n'
-            )
+            writer.writerow([
+                department,
+                stats['number_of_employees'],
+                stats['minimum_salary'],
+                stats['maximum_salary'],
+                stats['average_salary'],
+            ])
 
 
 def print_hierarchy(department_teams: dict[str, set[str]]) -> None:
@@ -91,7 +90,7 @@ def print_departmental_summary(department_statistics: dict[str, dict]) -> None:
         )
         print(
             f'Минимальная зарплата в департаменте: '
-            f' {stats["minimum_salary"]}'
+            f'{stats["minimum_salary"]}'
         )
         print(
             f'Максимальная зарплата в департаменте: '
@@ -105,13 +104,14 @@ def print_departmental_summary(department_statistics: dict[str, dict]) -> None:
 
 def main(option: int, input_path: str, output_path: str) -> None:
     '''Оформление отчета в зависимости от варианта.'''
+    imported_csv = import_csv(input_path)
     if option == 1:
-        print_hierarchy(hierarchy(import_csv(input_path)))
+        print_hierarchy(hierarchy(imported_csv))
     elif option == 2:
         print_departmental_summary(departmental_summary
-                                   (import_csv(input_path)))
+                                   (imported_csv))
     elif option == 3:
-        save_departmental_summary_csv(import_csv(input_path), output_path)
+        save_departmental_summary_csv(imported_csv, output_path)
         print(f'Сохранено по пути: {output_path}')
     else:
         print('Ошибка значения')
